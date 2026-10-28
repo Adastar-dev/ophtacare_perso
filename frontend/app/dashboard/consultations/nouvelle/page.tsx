@@ -7,7 +7,8 @@ import { ConsultationForm } from "@/components/consultation-form"
 import { Chargement, Erreur, PageHeader } from "@/components/page-states"
 import { createConsultation, createPrescription, getRendezVousDetail } from "@/lib/services"
 import { useLieux } from "@/lib/lieu-context"
-import { ApiError } from "@/lib/api"
+import { ApiError, getToken } from "@/lib/api"
+import { enqueue } from "@/lib/offline-queue"
 import { fmtDateLongue, fmtHeure } from "@/lib/format"
 import type { RendezVous } from "@/lib/types"
 
@@ -50,16 +51,39 @@ function NouvelleContent() {
         submitLabel="Enregistrer la consultation"
         onCancel={() => router.back()}
         onSubmit={async ({ prescription, ...data }) => {
-          const res = await createConsultation(data)
-          if (prescription) {
-            try {
-              await createPrescription({ consultation_id: res.consultation.id, ...prescription })
-            } catch {
-              toast.error("Consultation enregistrée, mais l'ordonnance n'a pas pu l'être. Vous pouvez la rédiger depuis la consultation.")
+          try {
+            const res = await createConsultation(data)
+            if (prescription) {
+              try {
+                await createPrescription({ consultation_id: res.consultation.id, ...prescription })
+              } catch {
+                toast.error("Consultation enregistrée, mais l'ordonnance n'a pas pu l'être. Vous pouvez la rédiger depuis la consultation.")
+              }
             }
+            toast.success("Consultation enregistrée")
+            router.replace(`/dashboard/consultations/detail?id=${res.consultation.id}`)
+          } catch (err: unknown) {
+            if (err instanceof ApiError && err.status === 0) {
+              await enqueue({
+                id: crypto.randomUUID(),
+                method: 'POST',
+                path: '/consultations',
+                body: data,
+                prescription: prescription ?? undefined,
+                token: getToken() ?? '',
+                created_at: new Date().toISOString(),
+                label: `Consultation du ${new Date().toLocaleDateString('fr-FR')}`,
+              })
+              try {
+                const reg = await navigator.serviceWorker?.ready
+                if (reg && 'sync' in reg) await (reg as any).sync.register('ophtacare-sync')
+              } catch {}
+              toast.success("Hors ligne — consultation sauvegardée, sera envoyée à la reconnexion")
+              router.back()
+              return
+            }
+            throw err
           }
-          toast.success("Consultation enregistrée")
-          router.replace(`/dashboard/consultations/detail?id=${res.consultation.id}`)
         }}
       />
     </div>

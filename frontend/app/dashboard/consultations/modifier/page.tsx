@@ -6,7 +6,8 @@ import { toast } from "sonner"
 import { ConsultationForm } from "@/components/consultation-form"
 import { Chargement, Erreur, PageHeader } from "@/components/page-states"
 import { getConsultation, updateConsultation } from "@/lib/services"
-import { ApiError } from "@/lib/api"
+import { ApiError, getToken } from "@/lib/api"
+import { enqueue } from "@/lib/offline-queue"
 import { fmtDate, nomComplet } from "@/lib/format"
 import type { Consultation } from "@/lib/types"
 
@@ -32,9 +33,31 @@ function ModifierContent() {
         submitLabel="Enregistrer les modifications"
         onCancel={() => router.back()}
         onSubmit={async ({ prescription: _p, ...data }) => {
-          await updateConsultation(consultation.id, data)
-          toast.success("Consultation mise à jour")
-          router.replace(`/dashboard/consultations/detail?id=${consultation.id}`)
+          try {
+            await updateConsultation(consultation.id, data)
+            toast.success("Consultation mise à jour")
+            router.replace(`/dashboard/consultations/detail?id=${consultation.id}`)
+          } catch (err: unknown) {
+            if (err instanceof ApiError && err.status === 0) {
+              await enqueue({
+                id: crypto.randomUUID(),
+                method: 'PUT',
+                path: `/consultations/${consultation.id}`,
+                body: data,
+                token: getToken() ?? '',
+                created_at: new Date().toISOString(),
+                label: `Modification consultation #${consultation.id}`,
+              })
+              try {
+                const reg = await navigator.serviceWorker?.ready
+                if (reg && 'sync' in reg) await (reg as any).sync.register('ophtacare-sync')
+              } catch {}
+              toast.success("Hors ligne — modification sauvegardée, sera envoyée à la reconnexion")
+              router.back()
+              return
+            }
+            throw err
+          }
         }}
       />
     </div>

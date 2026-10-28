@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/components/theme-provider'
 import { PwaInstallBanner } from '@/components/pwa-install-banner'
+import { OfflineBanner } from '@/components/offline-banner'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AuthProvider>
             {children}
             <PwaInstallBanner />
+            <OfflineBanner />
             <Toaster position="top-center" richColors />
           </AuthProvider>
         </ThemeProvider>

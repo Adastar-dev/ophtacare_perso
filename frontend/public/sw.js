@@ -3,7 +3,7 @@
 //   - App shell (HTML, JS, CSS, icônes) → cache en install, mise à jour en arrière-plan
 //   - Appels API /api/* → network-first, fallback sur cache si hors-ligne
 
-const SHELL_CACHE = "ophtacare-shell-v1"
+const SHELL_CACHE = "ophtacare-shell-v2"
 const API_CACHE   = "ophtacare-api-v1"
 
 // Ressources de l'app shell à précacher
@@ -35,6 +35,21 @@ self.addEventListener("activate", (event) => {
     )
   )
   self.clients.claim()
+})
+
+// Background Sync — notifie les clients connectés de synchroniser la file d'attente
+self.addEventListener("sync", (event) => {
+  if (event.tag === "ophtacare-sync") {
+    event.waitUntil(
+      self.clients
+        .matchAll({ includeUncontrolled: true, type: "window" })
+        .then((clients) => {
+          for (const client of clients) {
+            client.postMessage({ type: "SYNC_REQUESTED" })
+          }
+        })
+    )
+  }
 })
 
 self.addEventListener("fetch", (event) => {
