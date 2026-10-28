@@ -1,7 +1,15 @@
+```sh
 #!/bin/sh
 set -e
 
-# ── 1. Fichier .env généré depuis les variables d'environnement ───────────────
+# DATABASE_URL (une seule variable avec tout dedans) est prioritaire sur DB_*
+if [ -z "${DATABASE_URL}" ]; then
+  : ${DB_HOST:?DB_HOST ou DATABASE_URL obligatoire}
+  : ${DB_DATABASE:?DB_DATABASE ou DATABASE_URL obligatoire}
+  : ${DB_USERNAME:?DB_USERNAME ou DATABASE_URL obligatoire}
+  : ${DB_PASSWORD:?DB_PASSWORD ou DATABASE_URL obligatoire}
+fi
+
 cat > /var/www/.env <<EOF
 APP_NAME=OphtaCare
 APP_ENV=production
@@ -22,11 +30,12 @@ LOG_CHANNEL=stderr
 LOG_LEVEL=error
 
 DB_CONNECTION=pgsql
-DB_HOST=${DB_HOST:?DB_HOST obligatoire}
+DATABASE_URL=${DATABASE_URL:-}
+DB_HOST=${DB_HOST:-}
 DB_PORT=${DB_PORT:-5432}
-DB_DATABASE=${DB_DATABASE:?DB_DATABASE obligatoire}
-DB_USERNAME=${DB_USERNAME:?DB_USERNAME obligatoire}
-DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD obligatoire}
+DB_DATABASE=${DB_DATABASE:-}
+DB_USERNAME=${DB_USERNAME:-}
+DB_PASSWORD=${DB_PASSWORD:-}
 DB_SSLMODE=require
 
 SESSION_DRIVER=database
@@ -40,13 +49,10 @@ QUEUE_CONNECTION=database
 FILESYSTEM_DISK=local
 EOF
 
-# ── 2. Migrations ─────────────────────────────────────────────────────────────
 php artisan migrate --force --no-interaction
-
-# ── 3. Cache de configuration et de routes ────────────────────────────────────
 php artisan config:cache
 php artisan route:cache
 
-# ── 4. Démarrage de php-fpm puis nginx ────────────────────────────────────────
 php-fpm -D
 exec nginx -g 'daemon off;'
+```
