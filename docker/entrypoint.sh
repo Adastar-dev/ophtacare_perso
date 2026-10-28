@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+<<<<<<< HEAD
+=======
+# ── 1. Fichier .env généré depuis les variables d'environnement ───────────────
+>>>>>>> 9a96421 (initial)
 # DATABASE_URL (une seule variable avec tout dedans) est prioritaire sur DB_*
 if [ -z "${DATABASE_URL}" ]; then
   : ${DB_HOST:?DB_HOST ou DATABASE_URL obligatoire}
