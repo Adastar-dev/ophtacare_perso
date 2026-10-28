@@ -1,11 +1,7 @@
 #!/bin/sh
 set -e
 
-<<<<<<< HEAD
-=======
-# ── 1. Fichier .env généré depuis les variables d'environnement ───────────────
->>>>>>> 9a96421 (initial)
-# DATABASE_URL (une seule variable avec tout dedans) est prioritaire sur DB_*
+# DATABASE_URL est prioritaire sur les variables DB_* individuelles
 if [ -z "${DATABASE_URL}" ]; then
   : ${DB_HOST:?DB_HOST ou DATABASE_URL obligatoire}
   : ${DB_DATABASE:?DB_DATABASE ou DATABASE_URL obligatoire}
@@ -56,7 +52,7 @@ php artisan migrate --force --no-interaction
 php artisan config:cache
 php artisan route:cache
 
-# Création du compte initial si ADMIN_EMAIL et ADMIN_PASSWORD sont définis
+# Creation du compte initial si ADMIN_EMAIL et ADMIN_PASSWORD sont definis
 if [ -n "${ADMIN_EMAIL}" ] && [ -n "${ADMIN_PASSWORD}" ]; then
   printf '%s\n%s\n%s\n%s\n' "${ADMIN_NAME:-Docteur}" "${ADMIN_EMAIL}" "${ADMIN_PASSWORD}" "${ADMIN_PASSWORD}" \
     | php artisan ophtacare:compte 2>&1 || true
