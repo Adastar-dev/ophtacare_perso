@@ -55,7 +55,7 @@ php artisan route:cache
 # Création du compte initial si ADMIN_EMAIL et ADMIN_PASSWORD sont définis
 if [ -n "${ADMIN_EMAIL}" ] && [ -n "${ADMIN_PASSWORD}" ]; then
   printf '%s\n%s\n%s\n%s\n' "${ADMIN_NAME:-Docteur}" "${ADMIN_EMAIL}" "${ADMIN_PASSWORD}" "${ADMIN_PASSWORD}" \
-    | php artisan ophtacare:compte --no-interaction 2>&1 || true
+    | php artisan ophtacare:compte 2>&1 || true
 fi
 
 php-fpm -D
