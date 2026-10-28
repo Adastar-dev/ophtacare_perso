@@ -1,4 +1,3 @@
-```sh
 #!/bin/sh
 set -e
 
@@ -55,4 +54,3 @@ php artisan route:cache
 
 php-fpm -D
 exec nginx -g 'daemon off;'
-```
