@@ -1,0 +1,20 @@
+# Dépendances (réinstallées dans le build)
+frontend/node_modules
+frontend/.next
+frontend/out
+backend/vendor
+
+# Données locales — ne jamais inclure dans l'image
+backend/.env
+backend/database/database.sqlite
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+
+# Divers
+.git
+.gitignore
+*.md
+docker-compose*

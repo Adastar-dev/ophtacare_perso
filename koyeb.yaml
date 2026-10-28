@@ -1,0 +1,35 @@
+name: ophtacare
+
+services:
+  - name: web
+    type: web
+    instance_type: nano          # tier gratuit (256 MB RAM)
+    regions:
+      - par                      # Paris — le plus proche de l'Afrique de l'Ouest
+    ports:
+      - port: 8080
+        protocol: http
+    routes:
+      - path: /
+        port: 8080
+    deployment:
+      docker:
+        dockerfile: Dockerfile
+    env:
+      # Valeurs non-sensibles — les secrets sont définis dans l'interface Koyeb
+      - key: APP_TIMEZONE
+        value: "Africa/Dakar"
+      - key: DB_PORT
+        value: "5432"
+      # Secrets à configurer dans Koyeb (Settings → Environment variables) :
+      #   APP_KEY     → php artisan key:generate --show
+      #   APP_URL     → https://<nom>.koyeb.app
+      #   DB_HOST     → depuis Neon (ex: ep-xxx.eu-central-1.aws.neon.tech)
+      #   DB_DATABASE → depuis Neon
+      #   DB_USERNAME → depuis Neon
+      #   DB_PASSWORD → depuis Neon
+    health_checks:
+      - path: /up
+        port: 8080
+        interval: 30
+        timeout: 5
